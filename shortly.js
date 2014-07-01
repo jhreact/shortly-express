@@ -45,6 +45,8 @@ app.get('/links', checkUser, function(req, res) {
   })
 });
 
+// Should we assume the user is already authenticated if they're posting data?
+// i.e., only check on get requests
 app.post('/links', checkUser, function(req, res) {
   var uri = req.body.url;
   if (!util.isValidUrl(uri)) {
@@ -104,7 +106,11 @@ app.post('/signup', function(req, res) {
           password: bpass
         }).save().then(function() {
           // console.log('SAVED NEW USER');
-          res.redirect('/');
+          // res.redirect('/');
+          req.session.regenerate(function() {
+            req.session.user = username;
+            res.redirect('/');
+          });
         });
       });
     }
@@ -128,7 +134,10 @@ app.post('/login', function(req, res) {
         if (isCorrect) {
           // console.log('CORRECT PASS');
           // console.log(password, foundUser.attributes.password);
-          res.redirect('/');
+          req.session.regenerate(function() {
+            req.session.user = username;
+            res.redirect('/');
+          });
         } else {
           // console.log('WRONG PASS');
           // console.log(password, foundUser.attributes.password);
@@ -143,7 +152,11 @@ app.post('/login', function(req, res) {
   });
 });
 
-
+app.get('/logout', function(req, res) {
+  res.session.destroy(function() {
+    res.redirect('/');
+  });
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
