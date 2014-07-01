@@ -79,7 +79,7 @@ app.post('/signup', function(req, res) {
   new User({ username: username }).fetch().then(function(found) {
     // Should be if found and compare pass?
     if (found) {
-      res.render('index');
+      res.redirect('/');
     } else {
       var user = new User({
         username: username,
@@ -88,7 +88,7 @@ app.post('/signup', function(req, res) {
 
       user.save().then(function(newUser) {
         Users.add(newUser);
-        res.render('index');
+        res.redirect('/');
       });
     }
   });
