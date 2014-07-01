@@ -1,6 +1,7 @@
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -75,26 +76,34 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
+  bcrypt.hash(password, null, null, function(err, hash) {
+    var bpass = hash;
+    var user = new User({
+      username: username,
+      password: bpass
+    }).save().then(function() {
+      res.redirect('/');
+    });
+  });
+
+});
+
+app.get('/login', function(req, res) {
+  res.render('login');
+});
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
 
   new User({ username: username }).fetch().then(function(found) {
     // TODO: Should check to see if user already exists and do something else
     if (found) {
+      console.log('FOUND USER: ');
+      console.log(found);
       res.redirect('/');
-    } else {
-      var user = new User({
-        username: username,
-        password: password
-      });
-
-      user.save().then(function(newUser) {
-        Users.add(newUser);
-        res.redirect('/');
-      });
     }
   });
-});
-
-app.get('/login', function(req, res) {
   res.render('login');
 });
 
