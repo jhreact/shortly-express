@@ -11,6 +11,8 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
+app.use(express.cookieParser('s3cr3t'));
+app.use(express.session());
 
 app.configure(function() {
   app.set('views', __dirname + '/views');
@@ -20,31 +22,45 @@ app.configure(function() {
   app.use(express.static(__dirname + '/public'));
 });
 
-app.get('/', function(req, res) {
+var checkUser = function(req, res, next) {
+  if (req.session.user) {
+    next();
+  } else {
+    // req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
+};
+
+app.get('/', checkUser, function(req, res) {
   res.render('index');
 });
 
-app.get('/create', function(req, res) {
+app.get('/create', checkUser, function(req, res) {
   res.render('index');
 });
 
-app.get('/links', function(req, res) {
+app.get('/links', checkUser, function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   })
 });
 
-app.post('/links', function(req, res) {
+app.post('/links', checkUser, function(req, res) {
   var uri = req.body.url;
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     return res.send(404);
   }
-
+  // console.log("CHECKING URI:");
+  // console.log(uri);
   new Link({ url: uri }).fetch().then(function(found) {
+    // console.log("DID WE FIND URI?");
+    // console.log(found.attributes);
     if (found) {
+      // console.log("FOUND IT!")
       res.send(200, found.attributes);
     } else {
+      // console.log("DIDN'T FIND IT :(");
       util.getUrlTitle(uri, function(err, title) {
         if (err) {
           console.log('Error reading URL heading: ', err);
