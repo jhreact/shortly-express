@@ -77,7 +77,7 @@ app.post('/signup', function(req, res) {
   var password = req.body.password;
 
   new User({ username: username }).fetch().then(function(found) {
-    // Should be if found and compare pass?
+    // TODO: Should check to see if user already exists and do something else
     if (found) {
       res.redirect('/');
     } else {
