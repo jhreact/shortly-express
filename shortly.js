@@ -76,14 +76,22 @@ app.get('/signup', function(req, res) {
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  bcrypt.hash(password, null, null, function(err, hash) {
-    var bpass = hash;
-    var user = new User({
-      username: username,
-      password: bpass
-    }).save().then(function() {
+  new User({ username: username }).fetch().then(function(foundUser) {
+    if (foundUser) {
+      // console.log('USER ALREADY EXISTS');
       res.redirect('/');
-    });
+    } else {
+      bcrypt.hash(password, null, null, function(err, hash) {
+        var bpass = hash;
+        var user = new User({
+          username: username,
+          password: bpass
+        }).save().then(function() {
+          // console.log('SAVED NEW USER');
+          res.redirect('/');
+        });
+      });
+    }
   });
 
 });
@@ -96,15 +104,27 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
-  new User({ username: username }).fetch().then(function(found) {
-    // TODO: Should check to see if user already exists and do something else
-    if (found) {
-      console.log('FOUND USER: ');
-      console.log(found);
-      res.redirect('/');
+  new User({ username: username }).fetch().then(function(foundUser) {
+    if (foundUser) {
+      // console.log('FOUND USER: ');
+      // console.log(foundUser.attributes);
+      bcrypt.compare(password, foundUser.attributes.password, function(err, isCorrect) {
+        if (isCorrect) {
+          // console.log('CORRECT PASS');
+          // console.log(password, foundUser.attributes.password);
+          res.redirect('/');
+        } else {
+          // console.log('WRONG PASS');
+          // console.log(password, foundUser.attributes.password);
+          res.redirect('/signup');
+        }
+      });
+    } else {
+      // console.log('COULD NOT FIND USER');
+      // console.log(username);
+      res.redirect('/login');
     }
   });
-  res.render('login');
 });
 
 
