@@ -153,7 +153,7 @@ app.post('/login', function(req, res) {
 });
 
 app.get('/logout', function(req, res) {
-  res.session.destroy(function() {
+  req.session.destroy(function() {
     res.redirect('/');
   });
 });
